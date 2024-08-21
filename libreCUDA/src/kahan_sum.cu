@@ -1,5 +1,8 @@
 #include <librecuda.h>
 #include <cstring>
+#include <iostream>
+#include <fstream>
+#include <vector>
 
 __global__ void kahan_sum_kernel(const float* data, int size, float* result) {
     float sum = 0.0f;
@@ -15,49 +18,47 @@ __global__ void kahan_sum_kernel(const float* data, int size, float* result) {
     *result = sum;
 }
 
-extern "C" {
-    float kahan_sum(const float* data, int size) {
-        // Allocate device memory
-        void *d_data, *d_result;
-        libreCuMemAlloc(&d_data, size * sizeof(float), true);
-        libreCuMemAlloc(&d_result, sizeof(float), true);
+float kahan_sum(const float* data, int size) {
+    // Allocate device memory (accessible by CPU)
+    void *d_data, *d_result;
+    libreCuMemAlloc(&d_data, size * sizeof(float), true);
+    libreCuMemAlloc(&d_result, sizeof(float), true);
 
-        // Copy data to device
-        libreCuMemcpyHtoD(d_data, data, size * sizeof(float));
+    // Copy data to device (now we can directly access it)
+    std::memcpy(d_data, data, size * sizeof(float));
 
-        // Load the CUDA module (assuming you have compiled the kernel to a cubin file)
-        LibreCUmodule module;
-        const char* module_name = "kahan_sum.cubin"; // Make sure this file exists
-        libreCuModuleLoad(&module, module_name);
+    // Load the CUDA module from a file
+    LibreCUmodule module;
+    std::ifstream input("kahan_sum_kernel.cubin", std::ios::binary);
+    std::vector<uint8_t> buffer(std::istreambuf_iterator<char>(input), {});
+    libreCuModuleLoadData(&module, buffer.data(), buffer.size());
 
-        // Get the kernel function
-        LibreCUfunction kernel;
-        libreCuModuleGetFunction(&kernel, module, "kahan_sum_kernel");
+    // Get the kernel function
+    LibreCUFunction kernel;
+    libreCuModuleGetFunction(&kernel, module, "kahan_sum_kernel");
 
-        // Set up kernel parameters
-        void* params[] = {&d_data, &size, &d_result};
+    // Set up kernel parameters
+    void* params[] = {&d_data, &size, &d_result};
 
-        // Create a stream
-        LibreCUstream stream;
-        libreCuStreamCreate(&stream, 0);
+    // Create a stream
+    LibreCUstream stream;
+    libreCuStreamCreate(&stream, 0);
 
-        // Launch the kernel
-        libreCuLaunchKernel(kernel, 1, 1, 1, 1, 1, 1, 0, stream, params, sizeof(params) / sizeof(void*), nullptr);
+    // Launch the kernel
+    libreCuLaunchKernel(kernel, 1, 1, 1, 1, 1, 1, 0, stream, params, sizeof(params) / sizeof(void*), nullptr);
 
-        // Wait for the kernel to complete
-        libreCuStreamCommence(stream);
-        libreCuStreamAwait(stream);
+    // Wait for the kernel to complete
+    libreCuStreamCommence(stream);
+    libreCuStreamAwait(stream);
 
-        // Copy result back to host
-        float result;
-        libreCuMemcpyDtoH(&result, d_result, sizeof(float));
+    // Copy result back to host (now we can directly access it)
+    float result = *(float*)d_result;
 
-        // Clean up
-        libreCuMemFree(d_data);
-        libreCuMemFree(d_result);
-        libreCuStreamDestroy(stream);
-        libreCuModuleUnload(module);
+    // Clean up
+    libreCuMemFree(d_data);
+    libreCuMemFree(d_result);
+    libreCuStreamDestroy(stream);
+    libreCuModuleUnload(module);
 
-        return result;
-    }
+    return result;
 }

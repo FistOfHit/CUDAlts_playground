@@ -22,10 +22,11 @@ int main() {
     libreCuCtxCreate_v2(&ctx, CU_CTX_SCHED_YIELD, device);
 
     // Example data
-    std::vector<float> data = {1.0f, 1e100f, 1.0f, -1e100f};
+    std::vector<double> data = {1.0, 1e100, 1.0, -1e100};
+    std::vector<float> float_data(data.begin(), data.end());
     
     // Call the Kahan summation function
-    float result = kahan_sum(data.data(), data.size());
+    float result = kahan_sum(float_data.data(), float_data.size());
 
     std::cout << "Kahan sum result: " << result << std::endl;
 
