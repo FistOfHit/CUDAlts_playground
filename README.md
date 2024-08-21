@@ -4,7 +4,7 @@ Playing around with alternatives to CUDA.
 
 ## Current work
 
-- [LibreCUDA](https://github.com/mikex86/LibreCuda) - [Kahan summation](https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
+- [LibreCUDA](https://github.com/mikex86/LibreCuda) - [Kahan summation](https://en.wikipedia.org/wiki/Kahan_summation_algorithm) (in progress)
 
 ## Build and run
 
