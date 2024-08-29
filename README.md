@@ -19,6 +19,7 @@ To build and run the project, simply use the provided script with:
 - HIP on AMD devices
 - oneAPI on intel or nvidia devices
 - openCL
+- some experiments on [LIGER](https://github.com/linkedin/Liger-Kernel)
 
 ## License
 
