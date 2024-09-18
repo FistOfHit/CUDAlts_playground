@@ -20,9 +20,9 @@ To build and run the project, simply use the provided script with:
 - oneAPI on intel or nvidia devices
 - openCL
 - some experiments on [LIGER](https://github.com/linkedin/Liger-Kernel)
+- [Chapel](https://chapel-lang.org/)
 
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file
 for details.
-
